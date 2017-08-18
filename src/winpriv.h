@@ -66,6 +66,7 @@ int win_active_tab();
 void win_tab_change(int change);
 void win_tab_move(int amount);
 void win_tab_create();
+void win_tab_close();
 void win_tab_clean();
 void win_tab_attention(struct term* term);
 void win_tab_set_title(struct term* term, wchar_t* title);
@@ -76,7 +77,7 @@ wchar_t* win_tab_title_pop(struct term* term);
 void win_tab_save_title(struct term* term);
 void win_tab_restore_title(struct term* term);
 
-void win_tab_mouse_click(int x);
+void win_tab_mouse_click(bool down, int x);
 int win_tab_height();
 void win_paint_tabs(HDC dc, int width);
 void win_for_each_term(void (*cb)(struct term* term));

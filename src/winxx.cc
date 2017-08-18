@@ -22,6 +22,9 @@ int cs_mbstowcs(wchar *ws, const char *s, size_t wlen);
 
 #define lengthof(array) (sizeof(array) / sizeof(*(array)))
 
+#define CLOSE_BUTTON_PADDING  2
+#define ADD_BUTTON_PADDING 2
+
 using std::tuple;
 using std::get;
 
@@ -191,6 +194,10 @@ void win_tab_create() {
     set_tab_bar_visibility(tabs.size() > 1);
 }
 
+void win_tab_close() {
+    child_terminate(win_active_terminal()->child);
+}
+    
 void win_tab_clean() {
     bool invalidate = false;
     for (;;) {
@@ -316,6 +323,8 @@ static void paint_tab(HDC dc, int width, int tabheight, const Tab& tab) {
     LineTo(dc, 0, 0);
     LineTo(dc, width, 0);
     TextOutW(dc, width/2, (tabheight - tab_font_size()) / 2, tab.info.titles[tab.info.titles_i].data(), tab.info.titles[tab.info.titles_i].size());
+    // close button
+    TextOutW(dc, width - tab_font_size() / 2 - CLOSE_BUTTON_PADDING * g_xscale, (tabheight - tab_font_size()) / 2, L"x", 1);
 }
 
 // Wrap GDI object for automatic release
@@ -330,9 +339,11 @@ static int tab_paint_width = 0;
 void win_paint_tabs(HDC dc, int width) {
     if (!tab_bar_visible) return;
 
+    const int loc_tabheight = 18 * g_yscale;
+        
     // the sides of drawable area are not visible, so we really should draw to
     // coordinates 1..(width-2)
-    width = width - 2 * PADDING;
+    width = width - 2 * PADDING - ADD_BUTTON_PADDING - loc_tabheight * 0.5;
 
     const auto bg = cfg.tab_bg_colour;
     const auto fg = cfg.tab_fg_colour;
@@ -340,9 +351,8 @@ void win_paint_tabs(HDC dc, int width) {
     const auto attention_bg = cfg.tab_attention_bg_colour;
 
     const unsigned int preferred_width = 200 * g_xscale;
-
     const int tabwidth = (width / tabs.size()) > preferred_width ? preferred_width : width / tabs.size();
-    const int loc_tabheight = 18 * g_yscale;
+
     tab_paint_width = tabwidth;
     RECT tabrect;
     SetRect(&tabrect, 0, 0, tabwidth, loc_tabheight+1);
@@ -386,8 +396,8 @@ void win_paint_tabs(HDC dc, int width) {
             BitBlt(dc, i*tabwidth+PADDING, PADDING, tabwidth, tabheight(),
                     bufdc, 0, 0, SRCCOPY);
         }
-        
-        if ((int)tabs.size() * tabwidth < width) {
+
+        if (true || ((int)tabs.size() * tabwidth < width)/*always true*/) {
             SetRect(&tabrect, 0, 0, width - (tabs.size() * tabwidth), loc_tabheight+1);
             auto obrush = SelectWObj(bufdc, brush);
             auto obuf = SelectWObj(bufdc, CreateCompatibleBitmap(dc, width - (tabs.size() * tabwidth), tabheight()));
@@ -395,6 +405,16 @@ void win_paint_tabs(HDC dc, int width) {
             MoveToEx(bufdc, 0, 0, nullptr);
             LineTo(bufdc, 0, loc_tabheight);
             LineTo(bufdc, width - (tabs.size() * tabwidth), loc_tabheight);
+
+            // add button
+            const int size = loc_tabheight * 0.5;
+            const int margin = (loc_tabheight - size)/2;
+            MoveToEx(bufdc, ADD_BUTTON_PADDING * g_xscale + margin + size/2, margin, nullptr);
+            LineTo(bufdc, ADD_BUTTON_PADDING * g_xscale+ margin + size/2, margin + size);
+            MoveToEx(bufdc, ADD_BUTTON_PADDING * g_xscale+ margin, margin + size/2, nullptr);
+            LineTo(bufdc, ADD_BUTTON_PADDING * g_xscale + margin + size, margin + size/2);
+                
+            //TextOutW(dc, tab_font_size() / 2 + CLOSE_BUTTON_PADDING * g_xscale, (loc_tabheight - tab_font_size()) / 2, L"+", 1);
             BitBlt(dc, tabs.size()*tabwidth+PADDING, PADDING, width - (tabs.size() * tabwidth), tabheight(),
                     bufdc, 0, 0, SRCCOPY);
         }
@@ -407,13 +427,26 @@ void win_for_each_term(void (*cb)(struct term* term)) {
         cb(tab.terminal.get());
 }
 
-void win_tab_mouse_click(int x) {
+void win_tab_mouse_click(bool down, int x) {
     unsigned int tab = x / tab_paint_width;
-    if (tab >= tabs.size())
+    if (tab >= tabs.size()) {
+        if (!down) {
+            bool click_add = x < (tab_paint_width * tabs.size() + (ADD_BUTTON_PADDING + 18)* g_xscale);
+            if (click_add)
+                win_tab_create();
+        }
         return;
-    set_active_tab(tab);
-}
+    }
 
+    set_active_tab(tab);
+    
+    if (down) {
+        bool click_close = x > (tab_paint_width * (tab + 1) - tab_font_size() - CLOSE_BUTTON_PADDING * g_xscale);
+        if (click_close)
+            win_tab_close();
+    }
+}
+    
 }
 
 std::vector<Tab>& win_tabs() {

@@ -224,10 +224,10 @@ get_mouse_pos(LPARAM lp)
   return translate_pos(GET_X_LPARAM(lp), GET_Y_LPARAM(lp));
 }
 
-static bool tab_bar_click(LPARAM lp) {
+static bool tab_bar_click(bool down, LPARAM lp) {
   int y = GET_Y_LPARAM(lp);
   if (y >= PADDING && y < PADDING + g_render_tab_height) {
-    win_tab_mouse_click(GET_X_LPARAM(lp));
+    win_tab_mouse_click(down, GET_X_LPARAM(lp));
     return true;
   }
   return false;
@@ -241,7 +241,7 @@ win_mouse_click(mouse_button b, LPARAM lp)
   static pos last_click_pos;
 
   win_show_mouse();
-  if (tab_bar_click(lp)) return;
+  if (tab_bar_click(true, lp)) return;
 
   mod_keys mods = get_mods();
   pos p = get_mouse_pos(lp);
@@ -263,7 +263,7 @@ win_mouse_click(mouse_button b, LPARAM lp)
 void
 win_mouse_release(mouse_button b, LPARAM lp)
 {
-  if (tab_bar_click(lp)) return;
+  if (tab_bar_click(false, lp)) return;
   term_mouse_release(win_active_terminal(), b, get_mods(), get_mouse_pos(lp));
   ReleaseCapture();
 }
