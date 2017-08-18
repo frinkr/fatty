@@ -2,9 +2,11 @@ FaTTY
 -----
 Forked from [FaTTY](https://github.com/juho-p/fatty), with close/new tab
 buttons.
-![FaTTY](http://imgur.com/a/sGLri)
 
-###Create shortcut on Desktop
+![FaTTY](http://i.imgur.com/jfLN2Z7.png)
+
+
+### Create shortcut on Desktop
 
 Set add `-` to shortcut target, i.e.
 
@@ -32,7 +34,7 @@ using tabs.
 If you find bugs (there are probably many), you may report them on Github or
 send pull requests
 
-###Installing
+### Installing
 
 To install, run cygwin setup\*.exe and have at least following packages marked for
 install:
