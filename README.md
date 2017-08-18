@@ -5,6 +5,7 @@ buttons.
 ![FaTTY](http://imgur.com/a/sGLri)
 
 ###Create shortcut on Desktop
+
 Set add `-` to shortcut target, i.e.
 
     C:\cygwin\bin\fatty.exe -
