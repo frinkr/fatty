@@ -1,7 +1,19 @@
 FaTTY
 -----
+Forked from [FaTTY](https://github.com/juho-p/fatty), with close/new tab
+buttons.
+![FaTTY](http://imgur.com/a/sGLri)
 
-![FaTTY](http://i.imgur.com/ZMpvcNH.png)
+###Create shortcut on Desktop
+Set add `-` to shortcut target, i.e.
+
+    C:\cygwin\bin\fatty.exe -
+
+
+
+
+Original README
+-----
 
 FaTTY is the [Cygwin](http://cygwin.com) Terminal emulator with tabs. It is
 useful for Windows and Cygwin users who want powerful terminal.
