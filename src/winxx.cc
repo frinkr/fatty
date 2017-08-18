@@ -319,12 +319,36 @@ static HGDIOBJ new_active_tab_font() {
 
 // paint a tab to dc (where dc draws to buffer)
 static void paint_tab(HDC dc, int width, int tabheight, const Tab& tab) {
+    // box lines
     MoveToEx(dc, 0, tabheight, nullptr);
     LineTo(dc, 0, 0);
     LineTo(dc, width, 0);
-    TextOutW(dc, width/2, (tabheight - tab_font_size()) / 2, tab.info.titles[tab.info.titles_i].data(), tab.info.titles[tab.info.titles_i].size());
+
+    // title
+    const auto & str = tab.info.titles[tab.info.titles_i];
+    SIZE str_size;
+    GetTextExtentPoint32W(dc, str.data(), str.size(), &str_size);
+    
+    RECT text_rect = {0, 0, width, tabheight};
+    UINT text_fmt = DT_VCENTER | DT_SINGLELINE;
+    const int close_button_size = tab_font_size() + 2 * CLOSE_BUTTON_PADDING * g_xscale;
+    if ((str_size.cx + close_button_size) > width) {
+        text_rect.left += 5 * g_xscale;
+        text_rect.right = width - close_button_size;
+        text_fmt |= DT_RIGHT;
+    }
+    else {
+        text_fmt |= DT_CENTER;
+    }
+    DrawTextW(dc, str.data(), str.size(), &text_rect, text_fmt);
+    
     // close button
-    TextOutW(dc, width - tab_font_size() / 2 - CLOSE_BUTTON_PADDING * g_xscale, (tabheight - tab_font_size()) / 2, L"x", 1);
+    RECT close_rect = {int(width - CLOSE_BUTTON_PADDING * g_xscale - tab_font_size()),
+                       0,
+                       int(width - CLOSE_BUTTON_PADDING * g_xscale),
+                       tabheight};
+
+    DrawTextW(dc, L"x", 1, &close_rect, DT_CENTER | DT_VCENTER);
 }
 
 // Wrap GDI object for automatic release
@@ -360,7 +384,7 @@ void win_paint_tabs(HDC dc, int width) {
     HDC bufdc = CreateCompatibleDC(dc);
     SetBkMode(bufdc, TRANSPARENT);
     SetTextColor(bufdc, fg);
-    SetTextAlign(bufdc, TA_CENTER);
+    //SetTextAlign(bufdc, TA_CENTER);
     {
         auto brush = CreateSolidBrush(bg);
         auto obrush = SelectWObj(bufdc, brush);
